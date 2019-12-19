@@ -118,16 +118,14 @@ window, cap = sg.Window('AI Insider Lab', layout, location=(0, 0), grab_anywhere
 main_event = "HAAR"
 
 while True:
-    time.sleep(1)
     ret, frame = cap.read()
-    print(ret)
+    #print(ret)
     if cap is None or not cap.isOpened():
-        time.sleep(3)
         print("sleep")
         continue
 
-    print("awake")
-    event, values = window.read(timeout=2000)
+    #print("awake")
+    event, values = window.read(timeout=2)
      
     if(event == "Yolo Object Detection"):
         main_event = "Yolo"
