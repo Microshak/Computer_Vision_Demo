@@ -115,6 +115,8 @@ net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
 
 window, cap = sg.Window('AI Insider Lab', layout, location=(0, 0), grab_anywhere=True), cv2.VideoCapture(0)
 
+
+
 main_event = "HAAR"
 
 while True:
@@ -129,8 +131,10 @@ while True:
      
     if(event == "Yolo Object Detection"):
         main_event = "Yolo"
+        cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
     if(event == "HAAR Cascade Face Detection"):
         main_event = "HAAR"
+        cap.set(cv2.CAP_PROP_BUFFERSIZE,10)
     
     if main_event == "Yolo":
         image = nn(frame)
