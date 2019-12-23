@@ -154,6 +154,8 @@ while True:
     if(event == "Face Detection HAAR Cascade"):
         main_event = "HAAR"
         cap.set(cv2.CAP_PROP_BUFFERSIZE,10)
+        net = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
+
     if(event == "Face Detection Neural Net"):
         main_event = "FaceNN"
         cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
