@@ -14,9 +14,7 @@ If you are on a Rasberry Pi follow this tutorial to get OpenCV on the device.  Y
 Also I had to try 4 different cameras before I found one that works.
 
 
-
-
-See Video Here
+## Step 4: See Video Here
 [![img](https://img.youtube.com/vi/KmciBgNEuS8/0.jpg)](https://www.youtube.com/watch?v=KmciBgNEuS8)
 
 
