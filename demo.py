@@ -9,7 +9,9 @@ import imutils
 layout = [[sg.Image(filename='', key='image')]
 ,[sg.Button("Object Detection Yolo", button_color=("black", "silver"), size=(12, 2))
 ,sg.Button("Face Detection HAAR Cascade", button_color=("black", "silver"), size=(12, 2))
-,sg.Button("Face Detection Neural Net", button_color=("black", "silver"), size=(12, 2))]
+,sg.Button("Face Detection Neural Net", button_color=("black", "silver"), size=(12, 2))
+,sg.Button("Face Detection Neural Net High Rez", button_color=("black", "silver"), size=(16, 2))]
+
 ]
 
 def get_output_layers(net):
@@ -81,7 +83,7 @@ def HAAR(img):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces = net.detectMultiScale(gray, 1.3, 5)
         for (x,y,w,h) in faces:
-            img = cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
+            img = cv2.rectangle(img,(x,y),(x+w,y+h),(300,0,0),2)
             roi_gray = gray[y:y+h, x:x+w]
             roi_color = img[y:y+h, x:x+w]
     except Exception as e:
@@ -90,7 +92,7 @@ def HAAR(img):
 
 
 def FaceNN(frame):
-    frame = imutils.resize(frame, width=600, height=800)
+    frame = imutils.resize(frame, width=300, height=300)
     (h, w) = frame.shape[:2]
     blob = cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0, (300, 300), (103.93, 116.77, 123.68))
 
@@ -119,11 +121,51 @@ def FaceNN(frame):
         text = "{:.2f}%".format(confidence * 100)
         y = startY - 10 if startY - 10 > 10 else startY + 10
         cv2.rectangle(frame, (startX, startY), (endX, endY),
-                      (0, 0, 255), 2)
+                      (0, 0, 300), 2)
         cv2.putText(frame, text, (startX, y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 300), 2)
     
     return frame
+
+def FaceNNFullRez(frame):
+    frame = imutils.resize(frame, width=700, height=400)
+    #frame = imutils.resize(frame, width=300, height=300)
+    (h, w) = frame.shape[:2]
+    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (h, w)), 1.0, (h, w), (103.93, 116.77, 123.68))
+ 
+#    blob = cv2.dnn.blobFromImage(frame)
+
+    # pass the blob through the network and obtain the detections and predictions
+    net.setInput(blob)
+    detections = net.forward()
+
+    # loop over the detections
+    for i in range(0, detections.shape[2]):
+        # extract the confidence (i.e., probability) associated with the
+        # prediction
+        confidence = detections[0, 0, i, 2]
+
+        # filter out weak detections by ensuring the `confidence` is
+        # greater than the minimum confidence
+        if confidence < .5:
+            continue
+
+        # compute the (x, y)-coordinates of the bounding box for the
+        # object
+        box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+        (startX, startY, endX, endY) = box.astype("int")
+
+        # draw the bounding box of the face along with the associated
+        # probability
+        text = "{:.2f}%".format(confidence * 100)
+        y = startY - 10 if startY - 10 > 10 else startY + 10
+        cv2.rectangle(frame, (startX, startY), (endX, endY),
+                      (0, 0, 300), 2)
+        cv2.putText(frame, text, (startX, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 300), 2)
+    
+    return frame
+
 
 classes = None
 net = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
@@ -131,11 +173,11 @@ net = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
 
 with open("yolov3.txt", 'r') as f:
      classes = [line.strip() for line in f.readlines()]
-
-COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
-window, cap = sg.Window('AI Insider Lab', layout, location=(0, 0), grab_anywhere=True), cv2.VideoCapture(0)
-
 main_event = "HAAR"
+COLORS = np.random.uniform(0, 300, size=(len(classes), 3))
+window, cap = sg.Window('AI Insider Lab', layout, location=(-10, 0), grab_anywhere=True), cv2.VideoCapture(0)
+
+
 
 while True:
     ret, frame = cap.read()
@@ -146,11 +188,12 @@ while True:
 
     #print("awake")
     event, values = window.read(timeout=20)
-     
+   
     if(event == "Object Detection Yolo"):
         main_event = "Yolo"
         net = cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
         cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
+    
     if(event == "Face Detection HAAR Cascade"):
         main_event = "HAAR"
         cap.set(cv2.CAP_PROP_BUFFERSIZE,10)
@@ -161,17 +204,26 @@ while True:
         cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
         net = cv2.dnn.readNetFromCaffe("deploy.prototxt.txt", "res10_300x300_ssd_iter_140000.caffemodel")
 
+    if(event == "Face Detection Neural Net High Rez"):
+        main_event = "FaceNNBig"
+        cap.set(cv2.CAP_PROP_BUFFERSIZE,1)
+        net = cv2.dnn.readNetFromCaffe("deploy.prototxt.txt", "res10_300x300_ssd_iter_140000.caffemodel")
+
+
+
     if main_event == "Yolo":
         image = Yolo(frame)
     if main_event == "HAAR":
         image = HAAR(frame)
     if main_event == "FaceNN":
         image = FaceNN(frame)
+    if main_event == "FaceNNBig":
+        image = FaceNNFullRez(frame)
     
     try:
         imgbytes = cv2.imencode('.png', image)[1].tobytes()  # ditto
         window['image'].update(data=imgbytes)    
-
+    
     except Exception as e:
         print("nope" + str(e))
 
